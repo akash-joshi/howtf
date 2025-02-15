@@ -156,8 +156,12 @@ export const cli = () => {
         const userResponse = response.userResponse;
 
         if (userResponse === "Yes") {
+          let stdoutOutput = ''; // Variable to collect stdout
+          let hasError = false; // Flag to store error analysis result
           const childProcess = exec(output.command);
+
           childProcess.stdout.on("data", (data) => {
+            stdoutOutput += data; // Accumulate the output
             console.log(data);
           });
           childProcess.stderr.on("data", (data) => {
@@ -167,6 +171,30 @@ export const cli = () => {
           childProcess.on("error", (error) => {
             console.error(error.message);
             errors.push(error.message);
+          });
+
+          // Wait for process to complete and analyze output
+          childProcess.on("close", async () => {
+            if (stdoutOutput) {
+              const errorAnalysis = await openai.chat.completions.create({
+                messages: [{
+                  role: "system",
+                  content: "You are an error detection system. Analyze the following command output and respond with a JSON object containing a single boolean field 'hasError' indicating if there are any errors, warnings, or concerning patterns in the output."
+                }, {
+                  role: "user",
+                  content: stdoutOutput
+                }],
+                model: "gpt-4o-mini",
+                response_format: { type: "json_object" }
+              });
+              
+              const analysisResult = JSON.parse(errorAnalysis.choices[0].message.content);
+              hasError = analysisResult.hasError;
+              
+              if (hasError) {
+                console.log("\x1b[33mPotential issues detected in the output.\x1b[0m");
+              }
+            }
           });
         }
       } while (errors.length);
