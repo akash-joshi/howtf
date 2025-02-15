@@ -13,8 +13,11 @@ export const configurator = (/** @type {{ config: Conf }} */ { config }) => {
   const modelChoices = [
     "gpt-3.5-turbo",
     "gpt-4o",
+    "gpt-4o-mini",
     "o1-preview",
+    "o1",
     "o1-mini",
+    "o3-mini",
   ];
 
   inquirer

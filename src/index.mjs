@@ -62,7 +62,7 @@ export const cli = () => {
       let model =
         /** @type {import("openai").OpenAI.ChatModel} */ (
           config.get("model")
-        ) ?? "gpt-3.5-turbo";
+        ) ?? "gpt-4o";
 
       if (!apiKey) {
         const MESSAGE = `${
